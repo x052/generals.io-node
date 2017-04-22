@@ -1,0 +1,25 @@
+{
+  "name": "generals.io-node",
+  "version": "1.0.0",
+  "description": "NodeJs wrapper for generals's bot server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/x052/generals.io-node.git"
+  },
+  "keywords": [
+    "generals.io",
+    "generals",
+    "bot",
+    "socket.io"
+  ],
+  "author": "x052",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/x052/generals.io-node/issues"
+  },
+  "homepage": "https://github.com/x052/generals.io-node#readme"
+}
