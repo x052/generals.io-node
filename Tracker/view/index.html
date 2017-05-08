@@ -1,0 +1,132 @@
+<head>
+    <title>Generals.io Tracker
+    </title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    <meta name="theme-color" content="#ffffff">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.3.0/css/mdb.min.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Quicksand" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.17/vue.js"></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+
+<style type="text/css">
+    html, body {
+        background-color: #333;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        font-family: 'Quicksand', sans-serif;
+    }
+
+    div {
+        display: block;
+        text-align: -webkit-center;
+    }
+
+    h1, h2, h3, p {
+        color: #ffffff;
+    }
+
+    h2 {
+        display: block;
+        font-size: 2em;
+        -webkit-margin-before: 0.67em;
+        -webkit-margin-after: 0.67em;
+        -webkit-margin-start: 0px;
+        -webkit-margin-end: 0px;
+        font-weight: bold;
+    }
+
+    .header {
+        background-color: #00A86B;
+        margin: 20px;
+        padding: 15px;
+    }
+
+    .h-profile {
+        background-color: teal;
+        margin: 20px;
+        padding: 1px;
+    }
+
+    .profile-rank {
+        display: flex;
+        text-align: -webkit-center;
+    }
+
+    .profile-rank-item {
+        flex: 1;
+        text-align: -webkit-center;
+    }
+
+    #container {
+        background-color: #383838;
+        margin: 10px;
+        padding: 5px;
+    }
+
+    .offline {
+        background-color: red;
+        margin: 3px;
+        padding: 3px;
+        border-radius: 5px;
+    }
+
+    .online {
+        background-color: green;
+        margin: 3px;
+        padding: 3px;
+        border-radius: 5px;
+    }
+</style>
+
+<body id="app">
+    <div class="header">
+        <h1>Generals.io analysis and more!</h1>
+    </div>
+    <center><div v-for="item in config.subDomains" class="profile-rank" id="container">
+        <div class="profile-rank-item">
+            <a class="" href="/{{ item.name }}" target="_blank" style="color: inherit;">
+                <h3 style="margin: 0px;">Server Name: </h3>
+                <h2 style="margin: 0px;"><span>
+                    {{ item.name }}
+                    </span>
+                </h2>
+            </a>
+        </div>
+        <div class="profile-rank-item">
+            <a class="" href="/{{ item.name }}" target="_blank" style="color: inherit;">
+                <h3 style="margin: 0px;">Tracking</h3>
+                <h2 style="margin: 0px;"><span>
+                    {{ item.users.length }} users
+                    </span>
+                </h2>
+            </a>
+        </div>
+    </div></center>
+</body>
+
+<script type="text/javascript">
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            config : [],
+        }
+    })
+</script>
+
+<script type="text/javascript">
+    $.ajax("/config")
+    .done(function(t) {
+        t = JSON.parse(t)
+        for (key in t.subDomains) {
+            t.subDomains[key].name = key
+        }
+        vm.config = t
+    })
+</script>

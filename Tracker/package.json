@@ -1,0 +1,23 @@
+{
+  "name": "generals.io-tracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/x052/generals.io-node.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/x052/generals.io-node/issues"
+  },
+  "homepage": "https://github.com/x052/generals.io-node#readme",
+  "dependencies": {
+    "express": "^4.15.2",
+    "request": "^2.81.0"
+  }
+}

@@ -1,0 +1,190 @@
+<script type="text/javascript">
+    window.server_path = location.pathname + '/'
+</script>
+
+<head>
+    <title>Generals.io Tracker
+    </title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    <meta name="theme-color" content="#ffffff">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.3.0/css/mdb.min.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Quicksand" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.17/vue.js"></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+
+<style type="text/css">
+    html, body {
+        background-color: #333;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        font-family: 'Quicksand', sans-serif;
+    }
+
+    div {
+        display: block;
+        text-align: -webkit-center;
+    }
+
+    h1, h2, h3, p {
+        color: #ffffff;
+    }
+
+    h2 {
+        display: block;
+        font-size: 2em;
+        -webkit-margin-before: 0.67em;
+        -webkit-margin-after: 0.67em;
+        -webkit-margin-start: 0px;
+        -webkit-margin-end: 0px;
+        font-weight: bold;
+    }
+
+    .header {
+        background-color: #00A86B;
+        margin: 20px;
+        padding: 15px;
+    }
+
+    .h-profile {
+        background-color: teal;
+        margin: 20px;
+        padding: 1px;
+    }
+
+    .profile-rank {
+        display: flex;
+        text-align: -webkit-center;
+    }
+
+    .profile-rank-item {
+        flex: 1;
+        text-align: -webkit-center;
+    }
+
+    #container {
+        background-color: #383838;
+        margin: 10px;
+        padding: 5px;
+    }
+
+    .offline {
+        background-color: red;
+        margin: 3px;
+        padding: 3px;
+        border-radius: 5px;
+    }
+
+    .online {
+        background-color: green;
+        margin: 3px;
+        padding: 3px;
+        border-radius: 5px;
+    }
+</style>
+
+<body id="app">
+    <div class="header">
+        <h1>generals.io User/Bot Tracker</h1>
+    </div>
+    <div class="h-profile">
+        <h2>The Bots (or users!)</h2>
+    </div>
+    <center><div v-for="item in bots" class="profile-rank" id="container">
+        <div class="profile-rank-item">
+            <a class="" href="{{ server_path }}profiles/{{ item.enc_name }}" target="_blank" style="color: inherit;">
+                <h3 style="margin: 0px;">Name: </h3>
+                <h2 style="margin: 0px;"><span>
+                    {{ item.name }}<span v-if="item.isOffline" class="offline">{{ item.isOffline }}</span><span v-if="item.isOnline" class="online">{{ item.isOnline }}</span>
+                    </span>
+                </h2>
+            </a>
+        </div>
+        <div class="profile-rank-item">
+            <h3 style="margin: 0px;">FFA</h3>
+            <h2 style="margin: 0px;"><span><span style="color: gold;">&#9733;</span>
+                {{ item.stars_FFA }}
+                </span>
+            </h2>
+            <p style="margin: 0px;">
+                Rank #{{ item.rank_FFA }}
+            </p>
+        </div>
+        <div class="profile-rank-item">
+            <h3 style="margin: 0px;">1v1</h3>
+            <h2 style="margin: 0px;"><span><span style="color: gold;">&#9733;</span>
+                {{ item.stars_1v1 }}
+                </span>
+            </h2>
+            <p style="margin: 0px;">
+                Rank #{{ item.rank_1v1 }}
+            </p>
+        </div>
+
+    </div></center>
+</body>
+
+<script type="text/javascript">
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            server_path : server_path,
+            bots : [],
+        }
+    })
+</script>
+
+<script type="text/javascript">
+    $.ajax(server_path + "config")
+    .done(function(t) {
+        t = JSON.parse(t)
+        for (var i = t.users.length - 1; i >= 0; i--) {
+            addPlayer(t.users[i])
+        }
+    })
+</script>
+
+<script type="text/javascript">
+    function addPlayer(bot_name) {
+        var player = {
+            name : bot_name,
+            enc_name : encodeURIComponent(bot_name),
+            ranks : {},
+            stars : {}
+        }
+
+        $.when(
+            $.get(server_path + "api/starsAndRanks?u=" + player.enc_name, function(t) {
+                t = JSON.parse(t)
+                player.ranks = t.ranks
+                player.stars = t.stars
+                player.rank_1v1 = player.ranks.duel
+                player.stars_1v1 = +parseFloat(player.stars.duel).toFixed(0) || 0
+                player.rank_FFA = player.ranks.ffa
+                player.stars_FFA = +parseFloat(player.stars.ffa).toFixed(0) || 0
+            }),
+            $.get(server_path + "api/replaysForUsername?u=" + player.enc_name + "&offset=0&count=1", function(e) {
+                e = JSON.parse(e)
+                var now = new Date()
+                var lastGame = now.valueOf() - e[0].started
+                if (lastGame == (now.valueOf() - 1483557570911)) lastGame = null
+                if (lastGame && lastGame < 1200000) {
+                    player.isOnline = 'Online'
+                } else {
+                    player.isOffline = 'Offline'
+                }
+            })
+        ).then(function() {
+            vm.bots.push(player)
+            vm.bots.sort(function(a, b) {
+                return parseFloat(b.stars_FFA + b.stars_1v1) - parseFloat(a.stars_FFA + a.stars_1v1)
+            })
+        })
+    }
+</script>

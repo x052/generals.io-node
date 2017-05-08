@@ -1,0 +1,435 @@
+<script>
+	window.bot_name = decodeURIComponent(location.pathname.replace(/.*\//, ''))
+    window.server_path = '/' + location.pathname.match(/\/(.*)\/profiles/)[1] + '/'
+</script>
+
+<head>
+    <title>Generals.io Tracker
+    </title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    <meta name="theme-color" content="#ffffff">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.3.0/css/mdb.min.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Quicksand" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.17/vue.js"></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+
+<style type="text/css">
+    html, body {
+        background-color: #333;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        font-family: 'Quicksand', sans-serif;
+    }
+
+    div {
+        display: block;
+        text-align: -webkit-center;
+    }
+
+    h1, h2, h3, p {
+        color: #ffffff;
+    }
+
+    h2 {
+        display: block;
+        font-size: 2em;
+        -webkit-margin-before: 0.67em;
+        -webkit-margin-after: 0.67em;
+        -webkit-margin-start: 0px;
+        -webkit-margin-end: 0px;
+        font-weight: bold;
+    }
+
+    .header {
+        background-color: #00A86B;
+        margin: 20px;
+        padding: 15px;
+    }
+
+    .h-profile {
+        background-color: teal;
+        margin: 20px;
+        padding: 1px;
+    }
+
+    .profile-rank {
+        display: flex;
+        text-align: -webkit-center;
+    }
+
+    .profile-rank-item {
+        flex: 1;
+        text-align: -webkit-center;
+    }
+
+    #container {
+        background-color: #383838;
+        margin: 10px;
+        padding: 5px;
+    }
+
+    .offline {
+        background-color: red;
+        margin: 3px;
+        padding: 3px;
+        border-radius: 5px;
+    }
+
+    .online {
+        background-color: green;
+        margin: 3px;
+        padding: 3px;
+        border-radius: 5px;
+    }
+
+    table {
+      border: 2px solid #333;
+      border-radius: 3px;
+      background-color: #fff;
+    }
+
+    th {
+      background-color: #282828;
+      color: rgba(255,255,255,0.66);
+      cursor: pointer;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    td {
+      background-color: #f9f9f9;
+    }
+
+    th, td {
+      min-width: 120px;
+      padding: 10px 20px;
+    }
+
+    #replays-table td.replay-col-result {
+        font-size: 14px;
+    }
+
+    .bot-tag {
+        background-color: teal;
+        color: white;
+        padding: 0 3px;
+    }
+
+</style>
+
+<body id="app">
+    <div class="header">
+        <h1>generals.io User/Bot Tracker</h1>
+    </div>
+    <div class="h-profile">
+        <a class="" href="{{ server_path }}r-profiles/{{ bot_name }}" target="_blank" style="color: inherit;">
+            <h2>{{bot_name}} <span v-if="isOffline" class="offline">{{isOffline}}</span><span v-if="isOnline" class="online">{{isOnline}}</span></h2>
+        </a>
+    </div>
+    <center><div class="profile-rank" id="container">
+        <div class="profile-rank-item">
+            <h3 style="margin: 0px;">1v1</h3>
+            <h2 style="margin: 0px;"><span><span style="color: gold;">&#9733;</span>
+                {{stars_1v1}}
+                </span>
+            </h2>
+            <p style="margin: 0px;">
+                Rank #{{rank_1v1}}
+            </p>
+        </div>
+        <div class="profile-rank-item">
+            <h3 style="margin: 0px;">FFA</h3>
+            <h2 style="margin: 0px;"><span><span style="color: gold;">&#9733;</span>
+                {{stars_FFA}}
+                </span>
+            </h2>
+            <p style="margin: 0px;">
+                Rank #{{rank_FFA}}
+            </p>
+        </div>
+    </div>
+    <div class="profile-rank" id="container">
+        <div class="profile-rank-item">
+            <h3 style="margin: 0px;">Total Games</h3>
+            <h2 style="margin: 0px;"><span><span style="color: gold;">&#8734;</span>
+                {{total_games}}
+                </span>
+            </h2>
+        </div>
+        <div class="profile-rank-item">
+            <h3 style="margin: 0px;">Time in game</h3>
+            <h2 style="margin: 0px;"><span><span style="color: gold;">&#8734;</span>
+                {{time_in_game}} Hours
+                </span>
+            </h2>
+        </div>
+    </div>
+    <div class="profile-rank" id="container">
+        <div class="profile-rank-item">
+            <h3 style="margin: 0px;">Total 1v1 Games</h3>
+            <h2 style="margin: 0px;"><span><span style="color: gold;">&#8734;</span>
+                {{total_1v1_games}}
+                </span>
+            </h2>
+        </div>
+        <div class="profile-rank-item">
+            <h3 style="margin: 0px;">Total 1v1 wins</h3>
+            <h2 style="margin: 0px;"><span><span style="color: gold;">&#8734;</span>
+                {{total_1v1_wins}}
+                </span>
+            </h2>
+        </div>
+        <div class="profile-rank-item">
+            <h3 style="margin: 0px;">1v1 Average</h3>
+            <h2 style="margin: 0px;"><span><span style="color: gold;">&#8734;</span>
+                {{average_1v1}}%
+                </span>
+            </h2>
+        </div>
+    </div>
+    <div class="profile-rank" id="container">
+        <div class="profile-rank-item">
+            <h3 style="margin: 0px;">Total FFA Games</h3>
+            <h2 style="margin: 0px;"><span><span style="color: gold;">&#8734;</span>
+                {{total_FFA_games}}
+                </span>
+            </h2>
+        </div>
+        <div class="profile-rank-item">
+            <h3 style="margin: 0px;">Total FFA wins</h3>
+            <h2 style="margin: 0px;"><span><span style="color: gold;">&#8734;</span>
+                {{total_FFA_wins}}
+                </span>
+            </h2>
+        </div>
+        <div class="profile-rank-item">
+            <h3 style="margin: 0px;">FFA Average</h3>
+            <h2 style="margin: 0px;"><span><span style="color: gold;">&#8734;</span>
+                {{average_FFA}}%
+                </span>
+            </h2>
+        </div>
+    </div>
+    <div class="profile-rank" id="container">
+            <div class="profile-rank-item">
+                <table id="replays-table" class="list selectable">
+                    <tr>
+                        <th>Type</th>
+                        <th>Date</th>
+                        <th>Turns</th>
+                        <th>Ranking</th>
+                    </tr>
+                    <tbody>
+                        <tr v-for="item in replays">
+                            <td>
+                                <a class="" href="{{ server_path }}replays/{{ item.id }}" target="_blank" style="color: inherit;">
+                                    <br>
+                                    {{ item.type }}
+                                </a>
+                            </td>
+                            <td>
+                                <a class="" href="{{ server_path }}replays/{{ item.id }}" target="_blank" style="color: inherit;">
+                                    <br>
+                                    {{ item.started }}
+                                </a>
+                            </td>
+                            <td>
+                                <a class="" href="{{ server_path }}replays/{{ item.id }}" target="_blank" style="color: inherit;">
+                                    <br>
+                                    {{ item.turns }}
+                                </a>
+                            </td>
+                            </a>
+                            <td class="replay-col-result">
+                                <span v-for="name in item.ranking">
+                                    <span v-if="name.isBot" class="bot-tag">{{ name.isBot }}</span>
+                                    <a class="" href="{{ server_path }}profiles/{{ name.profile }}" target="_blank" style="color: inherit;">{{ name.gio_username }}</a>
+                                    (<span style="color: gold;">&#9733;</span>{{ name.stars }})
+                                    <br>
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </center>
+</body>
+
+<script type="text/javascript">
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            server_path : server_path,
+            bot_name: "loading...",
+            rank_1v1 : 0,
+            stars_1v1 : 0,
+            rank_FFA : 0,
+            stars_FFA : 0,
+            total_games : 0,
+            time_in_game : 0,
+            total_1v1_games : 0,
+            total_1v1_wins : 0,
+            average_1v1 : 0,
+            total_FFA_games : 0,
+            total_FFA_wins : 0,
+            average_FFA : 0,
+            isOnline : '',
+            isOffline : '',
+            replays : [],
+        }
+    })
+</script>
+
+<script type="text/javascript">
+    window.player = {
+        name : encodeURIComponent(window.bot_name),
+        ranks : {},
+        stars : {}
+    }
+    $.ajax(server_path + "api/validateUsername?u=" + player.name)
+    .done(function(t) {
+        if (t === 'true') {
+            vm.bot_name = window.bot_name
+        } else {
+            vm.bot_name = window.bot_name + " Is not a valid bot"
+        }
+    })
+    $.ajax(server_path + "api/starsAndRanks?u=" + player.name)
+    .done(function(t) {
+        t = JSON.parse(t)
+        player.ranks = t.ranks
+        player.stars = t.stars
+        vm.rank_1v1 = player.ranks.duel
+        vm.stars_1v1 = +parseFloat(player.stars.duel).toFixed(3)
+        vm.rank_FFA = player.ranks.ffa
+        vm.stars_FFA = +parseFloat(player.stars.ffa).toFixed(3)
+    })
+</script>
+
+<script type="text/javascript">
+    $.ajax(server_path + "api/replaysForUsername?u=" + bot_name + "&offset=0&count=1")
+    .done(function(e) {
+        e = JSON.parse(e)
+        var now = new Date()
+        var lastGame = now.valueOf() - e[0].started
+        if (lastGame == (now.valueOf() - 1483557570911)) lastGame = null
+        if (lastGame && lastGame < 1200000) {
+            vm.isOnline = 'Online'
+        } else {
+            vm.isOffline = 'Offline'
+        }
+    })
+    $.ajax(server_path + "api/replaysForUsername?u=" + bot_name + "&offset=0&count=20")
+    .done(function(e) {
+        vm.replays = JSON.parse(e)
+        for (var i = vm.replays.length - 1; i >= 0; i--) {
+            var date = new Date(vm.replays[i].started)
+            date = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(),  date.getHours(), date.getMinutes(), date.getSeconds()))
+            vm.replays[i].started = date.toString().replace(/GMT.*/g,"")
+            vm.replays[i].turns = Math.floor(vm.replays[i].turns / 2)
+            vm.replays[i].ranking = botTag(vm.replays[i].ranking)
+        }
+    })
+    function botTag(usernames) {
+        for (var i = usernames.length - 1; i >= 0; i--) {
+            var usr = usernames[i].name.split('[Bot]')
+            if (usr.length > 1) {
+                usernames[i].isBot = "Bot"
+                usernames[i].gio_username = usr[1]
+                usernames[i].profile = "[Bot]" + usr[1]
+            } else {
+                usernames[i].isBot = ""
+                usernames[i].gio_username = usr[0]
+                usernames[i].profile = usr[0]
+            }
+        }
+        return usernames
+    }
+</script>
+
+<script type="text/javascript">
+    var inGame = function () {
+
+    }
+
+    function round(value, decimals) {
+        return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals)
+    }
+
+    var xmlhttp = new XMLHttpRequest()
+    xmlhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+            var myObj = JSON.parse(this.responseText)
+            vm.total_games = Object.keys(myObj)
+                .length
+            inGame = function (place, gameLength, object) {
+                var notInGame = false
+                for (var j = 0; j < gameLength; j++) {
+                    if (object[place].ranking[j].name == bot_name) {
+                        notInGame = true
+                    }
+                    return notInGame
+                }
+            }
+            check:
+                for (var i = 0; i < vm.total_games - 1; i++) {
+                    var gameSize = Object.keys(myObj[i].ranking)
+                        .length
+                    var place1 = myObj[i].ranking[0].name
+                    var place2 = myObj[i].ranking[1].name
+                    var gameTime = myObj[i].turns
+                    if (((gameSize == 2 || gameSize <= 8) && (place1 == bot_name || place2 == bot_name)) || myObj[i].type == "2v2")
+                        vm.time_in_game += gameTime
+                    if (gameSize == 3 && myObj[i].ranking[2].name == bot_name)
+                        vm.time_in_game += gameTime * 0.9
+                    if (gameSize == 4 && myObj[i].ranking[3].name == bot_name && myObj[i].type != "2v2")
+                        vm.time_in_game += gameTime * 0.8
+                    if (gameSize == 5 && myObj[i].ranking[4].name == bot_name)
+                        vm.time_in_game += gameTime * 0.6
+                    if (gameSize == 6 && myObj[i].ranking[5].name == bot_name)
+                        vm.time_in_game += gameTime * 0.5
+                    if (gameSize == 7 && myObj[i].ranking[6].name == bot_name)
+                        vm.time_in_game += gameTime * 0.42
+                    if (gameSize == 8 && myObj[i].ranking[7].name == bot_name)
+                        vm.time_in_game += gameTime * 0.25
+                    if (gameSize == 2 && (myObj[i].type == "classic" || myObj[i].type == "1v1")) {
+                        if (place1 == bot_name) {
+                            vm.total_1v1_wins++
+                        } else if (!(place2 == bot_name || place1 == bot_name)) {
+                            vm.total_1v1_games--
+                        }
+                        vm.total_1v1_games++
+                            continue
+                    }
+                    if ((gameSize > 2 && gameSize <= 8) && myObj[i].type == "classic") {
+                        if (place1 == bot_name) {
+                            vm.total_FFA_wins++
+                        } else if (inGame(i, gameSize, myObj)) {
+                            vm.total_FFA_games--
+                                ete++
+                        }
+                        vm.total_FFA_games++
+                            continue
+                    }
+                }
+            vm.time_in_game = round(vm.time_in_game / 2 / 60 / 60, 3)
+                .toFixed(0)
+            vm.average_1v1 = (vm.total_1v1_wins / (vm.total_1v1_games == 0 ? 1 : vm.total_1v1_games) * 100)
+                .toFixed(2)
+            vm.average_FFA = (vm.total_FFA_wins / (vm.total_FFA_games == 0 ? 1 : vm.total_FFA_games) * 100)
+                .toFixed(2)
+        }
+    }
+    xmlhttp.open("GET", server_path + "api/replaysForUsername?u=" + bot_name + "&offset=0&count=-1", true)
+    xmlhttp.send()
+</script>
