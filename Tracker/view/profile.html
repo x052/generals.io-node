@@ -14,9 +14,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css?family=Quicksand" rel="stylesheet">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.17/vue.js"></script>
     <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvasjs/1.7.0/canvasjs.min.js"></script>
 </head>
 
 <style type="text/css">
@@ -220,6 +221,22 @@
         </div>
     </div>
     <div class="profile-rank" id="container">
+        <div class="profile-rank-item">
+            <h3 style="margin: 0px;">Average turns per 8-player FFA game</h3>
+            <h2 style="margin: 0px;"><span><span style="color: gold;">&#8734;</span>
+                {{average_FFA_turns}}
+                </span>
+            </h2>
+        </div>
+        <div class="profile-rank-item">
+            <h3 style="margin: 0px;">Average turns per 1v1 game</h3>
+            <h2 style="margin: 0px;"><span><span style="color: gold;">&#8734;</span>
+                {{average_1v1_turns}}
+                </span>
+            </h2>
+        </div>
+    </div>
+    <div class="profile-rank" id="container">
             <div class="profile-rank-item">
                 <table id="replays-table" class="list selectable">
                     <tr>
@@ -263,6 +280,7 @@
             </div>
         </div>
     </center>
+    <div id="charts"></div>
 </body>
 
 <script type="text/javascript">
@@ -286,6 +304,10 @@
             isOnline : '',
             isOffline : '',
             replays : [],
+            average_FFA_turns : 0,
+            average_1v1_turns : 0,
+            average_1v1_turns_count : 0,
+            average_FFA_turns_count : 0,
         }
     })
 </script>
@@ -314,6 +336,55 @@
         vm.rank_FFA = player.ranks.ffa
         vm.stars_FFA = +parseFloat(player.stars.ffa).toFixed(3)
     })
+</script>
+
+<script type="text/javascript">
+    function makeGraphs() {
+        var scoreData = []
+
+        var divName = Math.random().toString(36).substring(7)
+        $("#charts").append('<div id="' + divName + '"></div>')
+        window.stars_chart_FFA = new CanvasJS.Chart(divName, {
+            zoomEnabled: true,
+            panEnabled: true,
+            title: {
+                text: "FFA Stars History"             
+            },
+            axisY: {
+                title: "Stars"
+            },
+            data : [{
+                fillOpacity : 0.3,
+                showInLegend: true,
+                legendMarkerType: "square",
+                name : bot_name,
+                type: "line",
+                dataPoints : []
+            }]
+        })
+        stars_chart_FFA.render()
+        divName = Math.random().toString(36).substring(7)
+        $("#charts").append('<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><div id="' + divName + '"></div>')
+        window.stars_chart_1v1 = new CanvasJS.Chart(divName, {
+            zoomEnabled: true,
+            panEnabled: true,
+            title: {
+                text: "1v1 Stars History"             
+            },
+            axisY: {
+                title: "Stars"
+            },
+            data : [{
+                fillOpacity : 0.3,
+                showInLegend: true,
+                legendMarkerType: "square",
+                name : bot_name,
+                type: "line",
+                dataPoints : []
+            }]
+        })
+        stars_chart_1v1.render()
+    }
 </script>
 
 <script type="text/javascript">
@@ -358,6 +429,8 @@
 </script>
 
 <script type="text/javascript">
+    makeGraphs()
+
     var inGame = function () {
 
     }
@@ -383,35 +456,58 @@
             }
             check:
                 for (var i = 0; i < vm.total_games - 1; i++) {
-                    var gameSize = Object.keys(myObj[i].ranking)
-                        .length
+                    var gameSize = Object.keys(myObj[i].ranking).length
+                    myObj[i].ranking.forEach((item, index) => {
+                        if (item.name === bot_name) {
+                            if (gameSize === 2 && (myObj[i].type === "classic" || myObj[i].type == "1v1")) {
+                                stars_chart_1v1.options.data[0].dataPoints.push({
+                                    y : item.stars,
+                                    x : myObj[i].started
+                                })
+                            }
+                            if (myObj[i].type === "classic" && gameSize > 2) {
+                                stars_chart_FFA.options.data[0].dataPoints.push({
+                                    y : item.stars,
+                                    x : myObj[i].started
+                                })
+                            }
+                        }
+                    })
                     var place1 = myObj[i].ranking[0].name
                     var place2 = myObj[i].ranking[1].name
                     var gameTime = myObj[i].turns
-                    if (((gameSize == 2 || gameSize <= 8) && (place1 == bot_name || place2 == bot_name)) || myObj[i].type == "2v2")
+                    if (myObj[i].type === "1v1") {
+                        vm.average_1v1_turns+=gameTime
+                        vm.average_1v1_turns_count++
+                    }
+                    if (((gameSize === 2 || gameSize <= 8) && (place1 === bot_name || place2 === bot_name)) || myObj[i].type == "2v2")
                         vm.time_in_game += gameTime
-                    if (gameSize == 3 && myObj[i].ranking[2].name == bot_name)
+                    if (gameSize === 3 && myObj[i].ranking[2].name === bot_name)
                         vm.time_in_game += gameTime * 0.9
-                    if (gameSize == 4 && myObj[i].ranking[3].name == bot_name && myObj[i].type != "2v2")
+                    if (gameSize === 4 && myObj[i].ranking[3].name === bot_name && myObj[i].type != "2v2")
                         vm.time_in_game += gameTime * 0.8
-                    if (gameSize == 5 && myObj[i].ranking[4].name == bot_name)
+                    if (gameSize === 5 && myObj[i].ranking[4].name === bot_name)
                         vm.time_in_game += gameTime * 0.6
-                    if (gameSize == 6 && myObj[i].ranking[5].name == bot_name)
+                    if (gameSize === 6 && myObj[i].ranking[5].name === bot_name)
                         vm.time_in_game += gameTime * 0.5
-                    if (gameSize == 7 && myObj[i].ranking[6].name == bot_name)
+                    if (gameSize === 7 && myObj[i].ranking[6].name === bot_name)
                         vm.time_in_game += gameTime * 0.42
-                    if (gameSize == 8 && myObj[i].ranking[7].name == bot_name)
+                    if (gameSize === 8 && myObj[i].ranking[7].name === bot_name)
                         vm.time_in_game += gameTime * 0.25
-                    if (gameSize == 2 && (myObj[i].type == "classic" || myObj[i].type == "1v1")) {
-                        if (place1 == bot_name) {
+                    if (gameSize === 2 && (myObj[i].type === "classic" || myObj[i].type == "1v1")) {
+                        if (place1 === bot_name) {
                             vm.total_1v1_wins++
-                        } else if (!(place2 == bot_name || place1 == bot_name)) {
+                        } else if (!(place2 === bot_name || place1 === bot_name)) {
                             vm.total_1v1_games--
                         }
                         vm.total_1v1_games++
                             continue
                     }
-                    if ((gameSize > 2 && gameSize <= 8) && myObj[i].type == "classic") {
+                    if ((gameSize == 8) && myObj[i].type === "classic") {
+                        vm.average_FFA_turns+=gameTime
+                        vm.average_FFA_turns_count++
+                    }
+                    if ((gameSize > 2 && gameSize <= 8) && myObj[i].type === "classic") {
                         if (place1 == bot_name) {
                             vm.total_FFA_wins++
                         } else if (inGame(i, gameSize, myObj)) {
@@ -422,12 +518,13 @@
                             continue
                     }
                 }
-            vm.time_in_game = round(vm.time_in_game / 2 / 60 / 60, 3)
-                .toFixed(0)
-            vm.average_1v1 = (vm.total_1v1_wins / (vm.total_1v1_games == 0 ? 1 : vm.total_1v1_games) * 100)
-                .toFixed(2)
-            vm.average_FFA = (vm.total_FFA_wins / (vm.total_FFA_games == 0 ? 1 : vm.total_FFA_games) * 100)
-                .toFixed(2)
+            vm.time_in_game = round(vm.time_in_game / 2 / 60 / 60, 3).toFixed(0)
+            vm.average_1v1 = (vm.total_1v1_wins / (vm.total_1v1_games == 0 ? 1 : vm.total_1v1_games) * 100).toFixed(2)
+            vm.average_FFA = (vm.total_FFA_wins / (vm.total_FFA_games == 0 ? 1 : vm.total_FFA_games) * 100).toFixed(2)
+            vm.average_FFA_turns = (vm.average_FFA_turns / vm.average_FFA_turns_count).toFixed(2)
+            vm.average_1v1_turns = (vm.average_1v1_turns / vm.average_1v1_turns_count).toFixed(2)
+            stars_chart_1v1.render()
+            stars_chart_FFA.render()
         }
     }
     xmlhttp.open("GET", server_path + "api/replaysForUsername?u=" + bot_name + "&offset=0&count=-1", true)

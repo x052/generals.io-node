@@ -1,5 +1,6 @@
 {
     "apiDomain": "generals.io/",
+    "giorDomain" : "https://generalsio-replays-[servername].s3.amazonaws.com/",
     "subDomains": {
         "bot": {
             "users": [
@@ -8,13 +9,16 @@
                 "[Bot] ROBOT9000",
                 "[Bot] sora ai",
                 "[Bot]git.io/sgts",
-                "[Bot][UW]EklipZai",
+                "[Bot]EklipZ_ai",
                 "[Bot] Curly-pi",
                 "[Bot] lmat",
                 "[Bot] [uw] zxqfl",
                 "[Bot] [UW] AGI",
                 "[Bot] Calvin",
-                "[Bot] melanc"
+                "[Bot] melanc",
+                "[Bot] FloBot",
+                "[Bot] iAM66yO0xT",
+                "[Bot] W"
             ]
         },
         "na": {

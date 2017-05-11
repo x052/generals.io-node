@@ -4,15 +4,20 @@ const request = require('request')
 
 const serverConfig = require('./config.json')
 
-const getServer = (req) => {
+const getServer = (req, goirFile) => {
     if (!serverConfig.subDomains[req.params['serverName']]) return false
     var serverName = req.params['serverName']
-    if (serverName === 'na') {
-        serverName = ''
+    
+    if (goirFile) {
+        return serverConfig.giorDomain.replace('[servername]', serverName)
     } else {
-        serverName += '.'
+        if (serverName === 'na') {
+            serverName = ''
+        } else {
+            serverName += '.'
+        }
+        return 'http://' + serverName + serverConfig.apiDomain
     }
-    return 'http://' + serverName + serverConfig.apiDomain
 }
 
 const getServer_two = (req) => {
@@ -64,7 +69,7 @@ app.get('/:serverName', htmlHeader, (req, res) => {
 })
 
 app.get('/:serverName/:replayID.gior', (req, res) => {
-    request(getServer(req) + req.params.replayID + '.gior', {encoding: null}, function (error, response, body) {
+    request(getServer(req, true) + req.params.replayID + '.gior', {encoding: null}, function (error, response, body) {
         res.send(body)
     })
 })
