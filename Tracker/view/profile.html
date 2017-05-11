@@ -459,16 +459,21 @@
                     var gameSize = Object.keys(myObj[i].ranking).length
                     myObj[i].ranking.forEach((item, index) => {
                         if (item.name === bot_name) {
+                            var date = new Date(myObj[i].started)
+                            date = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(),  date.getHours(), date.getMinutes(), date.getSeconds()))
+                            date = date.toString().replace(/GMT.*/g,"")
                             if (gameSize === 2 && (myObj[i].type === "classic" || myObj[i].type == "1v1")) {
                                 stars_chart_1v1.options.data[0].dataPoints.push({
                                     y : item.stars,
-                                    x : myObj[i].started
+                                    x : myObj[i].started,
+                                    label : date
                                 })
                             }
                             if (myObj[i].type === "classic" && gameSize > 2) {
                                 stars_chart_FFA.options.data[0].dataPoints.push({
                                     y : item.stars,
-                                    x : myObj[i].started
+                                    x : myObj[i].started,
+                                    label : date
                                 })
                             }
                         }
