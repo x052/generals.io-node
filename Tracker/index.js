@@ -84,4 +84,4 @@ app.get('/:serverName/config', htmlHeader, (req, res) => {
     res.json(serverConfig.subDomains[req.params['serverName']])
 })
 
-app.listen(8080)
+app.listen(8081)
